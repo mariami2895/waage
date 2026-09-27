@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Die Waage – Gleichungen mit x auf beiden Seiten</title>
+<style>
+:root {
+  --paper: #FFFFFF;
+  --ink: #1F2930;
+  --ink-2: #4F5D68;
+  --line: #D9E1E6;
+  --hover: #EEF3F5;
+  --slate: #3B4752;
+  --slate-2: #2A333B;
+  --teal: #2398AE;
+  --teal-ink: #14707F;
+  --teal-soft: #E2F3F6;
+  --rim: #1B7486;
+  --red: #C8322C;
+  --red-soft: #FCEBEA;
+  --kraft: #D6A460;
+  --kraft-top: #E6C187;
+  --kraft-side: #B9864A;
+  --kraft-in: #7C5226;
+  --kraft-line: #8C5A28;
+  --kraft-ink: #3B2410;
+  --ball-line: #C0590A;
+  --tape: #C68D4A;
+  --label: #FFF4DF;
+  --focus: #2398AE;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #172026;
+    --ink: #EAF0F3;
+    --ink-2: #A9B6BF;
+    --line: #2C3943;
+    --hover: #22303A;
+    --slate: #AEBBC6;
+    --slate-2: #8E9DAA;
+    --teal: #3BB5CB;
+    --teal-ink: #86D9E6;
+    --teal-soft: #163942;
+    --rim: #2A8FA2;
+    --red: #FF8279;
+    --red-soft: #3D2120;
+    --kraft-in: #5E3C18;
+    --focus: #86D9E6;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #172026;
+  --ink: #EAF0F3;
+  --ink-2: #A9B6BF;
+  --line: #2C3943;
+  --hover: #22303A;
+  --slate: #AEBBC6;
+  --slate-2: #8E9DAA;
+  --teal: #3BB5CB;
+  --teal-ink: #86D9E6;
+  --teal-soft: #163942;
+  --rim: #2A8FA2;
+  --red: #FF8279;
+  --red-soft: #3D2120;
+  --kraft-in: #5E3C18;
+  --focus: #86D9E6;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+:root {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Comic Neue", "Comic Sans MS", "Chalkboard SE", "Comic Sans", sans-serif;
+  font-weight: 700;
+  -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+
+.app { height: 100%; display: flex; flex-direction: column; }
+
+/* Kopfzeile */
+.top {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px 24px;
+  padding: 12px clamp(16px, 3vw, 40px);
+  border-bottom: 2px solid var(--line);
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand h1 { margin: 0; font-size: clamp(22px, 2.1vw, 32px); line-height: 1.1; }
+.brand svg { width: 40px; height: 40px; flex: none; }
+.i-slate { fill: var(--slate); }
+.i-teal { fill: var(--teal); }
+.i-line { fill: none; stroke: var(--slate); stroke-width: 1.4; stroke-linecap: round; }
+.tabs { display: flex; gap: 6px; padding: 4px; border: 2px solid var(--ink); border-radius: 999px; }
+.tab {
+  font-size: clamp(16px, 1.3vw, 20px);
+  padding: 8px 22px; min-height: 44px;
+  border: 0; border-radius: 999px;
+  background: transparent; color: var(--ink);
+  cursor: pointer; touch-action: manipulation;
+}
+.tab:hover { background: var(--hover); }
+.tab[aria-selected="true"] { background: var(--ink); color: var(--paper); }
+
+/* Hauptbereich */
+.layout {
+  flex: 1; min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 32%);
+  gap: clamp(16px, 2.4vw, 40px);
+  padding: clamp(12px, 1.8vw, 24px) clamp(16px, 3vw, 40px) clamp(14px, 2vw, 24px);
+}
+.stage { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.question { margin: 0; font-size: clamp(22px, 2.3vw, 38px); line-height: 1.15; }
+.scale-wrap { flex: 1; min-height: 280px; position: relative; margin: 4px 0; }
+.scale-wrap svg {
+  position: absolute; inset: 0; width: 100%; height: 100%; display: block;
+  user-select: none; -webkit-user-select: none; touch-action: manipulation;
+  font-family: inherit;
+}
+.status-row {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 10px 20px;
+}
+.status {
+  display: inline-flex; align-items: center; gap: 10px;
+  min-height: 48px; padding: 6px 20px 6px 10px;
+  border-radius: 999px;
+  font-size: clamp(18px, 1.55vw, 25px); line-height: 1.2;
+  background: var(--teal-soft); color: var(--teal-ink);
+}
+.status.bad { background: var(--red-soft); color: var(--red); }
+.status svg { width: 30px; height: 30px; flex: none; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  min-height: 46px; padding: 8px 16px;
+  font-size: clamp(16px, 1.2vw, 19px);
+  border: 2px solid var(--ink); border-radius: 12px;
+  background: var(--paper); color: var(--ink);
+  cursor: pointer; touch-action: manipulation;
+}
+.btn:hover:not(:disabled) { background: var(--hover); }
+.btn:disabled { opacity: .35; cursor: default; }
+.btn svg { width: 21px; height: 21px; flex: none; }
+.btn.primary { background: var(--teal-ink); border-color: var(--teal-ink); color: var(--paper); }
+.btn.primary:hover { background: var(--teal-ink); filter: brightness(1.1); }
+.btn.quiet { border-color: transparent; background: transparent; }
+.btn.quiet:hover:not(:disabled) { background: var(--hover); }
+.btn[hidden] { display: none; }
+.hint {
+  margin: 10px 4px 0; min-height: 1.4em; max-width: 70ch;
+  font-size: clamp(16px, 1.3vw, 21px); line-height: 1.35;
+  font-weight: 400; color: var(--ink-2);
+}
+.hint b { font-weight: 700; color: var(--ink); }
+
+/* Gleichungs-Panel mit Eckklammern */
+.panel { min-width: 0; align-self: start; }
+.frame { position: relative; padding: 28px 30px 34px; }
+.br { position: absolute; border: 0 solid var(--ink); pointer-events: none; }
+.br.a1 { top: 0; left: 0; width: 72%; height: 70%; border-top-width: 3px; border-left-width: 3px; }
+.br.a2 { top: 12px; left: 12px; width: 44%; height: 38%; border-top-width: 3px; border-left-width: 3px; }
+.br.b1 { right: 0; bottom: 0; width: 72%; height: 70%; border-bottom-width: 3px; border-right-width: 3px; }
+.br.b2 { right: 12px; bottom: 12px; width: 44%; height: 38%; border-bottom-width: 3px; border-right-width: 3px; }
+.panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 16px; }
+.panel-head h2 { margin: 0; font-size: clamp(20px, 1.7vw, 27px); }
+.eq-hidden { margin: 6px 0 4px; font-weight: 400; color: var(--ink-2); font-size: clamp(17px, 1.35vw, 21px); }
+.steps {
+  display: grid;
+  grid-template-columns: max-content max-content max-content 1fr;
+  align-items: baseline; row-gap: 12px;
+  font-size: clamp(24px, 2.15vw, 38px); line-height: 1.2;
+}
+.row { display: contents; }
+.lhs { justify-self: end; }
+.rel { justify-self: stretch; text-align: center; padding: 0 .32em; }
+.rhs { justify-self: start; }
+.op { padding-left: .9em; font-size: .78em; color: var(--teal-ink); }
+.row.pending span { color: var(--red); }
+.row.result .lhs, .row.result .rel, .row.result .rhs { border-bottom: 6px double currentColor; padding-bottom: 2px; }
+.row.new span { animation: rowIn .4s ease-out both; }
+@keyframes rowIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.probe {
+  margin-top: 20px; padding-top: 14px;
+  border-top: 2px dashed var(--line);
+  font-size: clamp(17px, 1.4vw, 23px); line-height: 1.45;
+}
+.probe p { margin: 0; }
+.probe .t { color: var(--ink-2); font-weight: 400; }
+.probe .ok { display: inline-flex; align-items: center; gap: 8px; margin-top: 4px; color: var(--teal-ink); }
+.probe .ok svg { width: 24px; height: 24px; }
+
+/* Waage (SVG) */
+.s-slate { fill: var(--slate); }
+.s-slate2 { fill: var(--slate-2); }
+.string { stroke: var(--slate); stroke-width: 3; stroke-linecap: round; }
+.bowl { fill: var(--teal); stroke: var(--rim); stroke-width: 1.5; }
+.rim { fill: var(--rim); }
+.hook { fill: var(--teal); stroke: var(--slate); stroke-width: 2.5; }
+.pivot { fill: var(--teal); stroke: var(--slate); stroke-width: 5; }
+.gauge-arc { fill: none; stroke: var(--slate); stroke-width: 3; stroke-linecap: round; opacity: .45; }
+.gauge-tick { stroke: var(--slate); stroke-width: 3; stroke-linecap: round; opacity: .45; }
+.gauge-mid { stroke: var(--teal); stroke-width: 5; stroke-linecap: round; }
+
+.item { cursor: pointer; outline: none; }
+.item .hit { fill: transparent; pointer-events: all; }
+.item .body { transition: transform .15s ease; }
+.item:hover .body { transform: translateY(-4px); }
+.item .ring { fill: none; stroke: var(--focus); stroke-width: 3; opacity: 0; }
+.item:focus-visible .ring { opacity: 1; }
+.locked .item { cursor: default; }
+.locked .item:hover .body { transform: none; }
+
+.box-front { fill: var(--kraft); }
+.box-top { fill: var(--kraft-top); }
+.box-side { fill: var(--kraft-side); }
+.box-front, .box-top, .box-side, .lid { stroke: var(--kraft-line); stroke-width: 1.6; stroke-linejoin: round; }
+.box-front { transition: fill-opacity .35s; }
+.box-inner { fill: var(--kraft-in); stroke: var(--kraft-line); stroke-width: 1.6; display: none; pointer-events: none; }
+.lid { fill: var(--kraft-top); display: none; pointer-events: none; transform-box: fill-box; transform-origin: 50% 100%; }
+.box-x { font-size: 30px; font-weight: 700; fill: var(--kraft-ink); text-anchor: middle; pointer-events: none; }
+.tape { fill: var(--tape); transition: opacity .2s; }
+.label { transition: opacity .2s; }
+.label rect { fill: var(--label); stroke: var(--kraft-line); stroke-width: 1.3; }
+.pk { display: inline-block; width: 1.16em; height: 1.1em; vertical-align: -0.2em; overflow: visible; }
+.co + .pk { margin-left: .04em; }
+.status .pk { width: 1.16em; height: 1.1em; }
+.badge { display: none; pointer-events: none; }
+.badge rect { fill: var(--teal); }
+.badge text { fill: var(--paper); font-size: 24px; font-weight: 700; text-anchor: middle; }
+.opened .box-top { opacity: 0; }
+.opened .box-inner { display: inline; }
+.opened .lid { display: inline; animation: lidUp .45s cubic-bezier(.3, 1.6, .5, 1) both; }
+.opened .box-front { fill-opacity: .28; }
+.opened .tape, .opened .label { opacity: 0; }
+.opened .badge { display: inline; animation: fadeIn .3s .4s both; }
+@keyframes lidUp { from { opacity: 0; transform: scaleY(.1); } to { opacity: 1; transform: scaleY(1); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.mini { stroke: var(--ball-line); stroke-width: 1; transform-box: fill-box; transform-origin: center; animation: pop .4s cubic-bezier(.3, 1.6, .5, 1) both; }
+@keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
+.ball-c { stroke: var(--ball-line); stroke-width: 1.5; }
+
+@media (max-width: 1099px) {
+  .app { height: auto; min-height: 100%; }
+  .layout { grid-template-columns: minmax(0, 1fr); align-content: start; }
+  .scale-wrap { flex: none; min-height: 0; aspect-ratio: 1024 / 620; }
+  .panel { align-self: stretch; }
+}
+@media (max-width: 560px) {
+  .tab { padding: 8px 14px; }
+  .frame { padding: 24px 20px 28px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
+    .tray[hidden] { display: none; }
+    .tray { display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+            margin: 10px 0 2px; padding: 9px 14px; border-radius: 12px;
+            background: rgba(0,0,0,.035); border: 1px dashed rgba(0,0,0,.18); }
+    .tray-title { font-size: .82rem; font-weight: 700; letter-spacing: .04em;
+                  text-transform: uppercase; opacity: .6; }
+    .tray-side { display: flex; align-items: center; gap: 7px; }
+    .tray-lbl { font-size: .84rem; opacity: .65; min-width: 3.4em; }
+    .tray-items { display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap; min-height: 1.5em; }
+    .tray-items .pk { width: 1.5em; height: 1.45em; }
+    .tray-items .bl { width: 1.15em; height: 1.15em; vertical-align: -0.2em; }
+    .tray-empty { font-size: .84rem; opacity: .4; }
+  
+    .top { justify-content: flex-start; }
+    .task-pick { display: flex; align-items: center; gap: 10px; font-size: clamp(15px, 1.2vw, 18px); }
+    .task-pick > span { font-weight: 700; opacity: .65; letter-spacing: .03em; text-transform: uppercase; font-size: .82em; }
+    #taskSel { font: inherit; font-size: clamp(16px, 1.3vw, 20px); padding: 9px 16px; min-height: 44px;
+               border: 2px solid var(--ink); border-radius: 999px; background: var(--paper); color: var(--ink);
+               cursor: pointer; }
+    .scale-wrap { max-height: 56vh; }
+    .tray-items .pk, .tray-items .bl { cursor: pointer; transition: transform .12s; }
+    .tray-items .pk:hover, .tray-items .bl:hover { transform: translateY(-3px) scale(1.08); }
+      /* Schülerfassung: kein Gleichungsfeld */
+    .panel { display: none; }
+    .layout { grid-template-columns: minmax(0, 1fr); }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <label class="task-pick">
+      <span>Aufgabe</span>
+      <select id="taskSel" aria-label="Aufgabe auswählen">
+        <option value="einstieg">Hilfe für Marcel und Elvan &nbsp;·&nbsp; 3x + 2 = 2x + 6</option>
+        <option value="halt1">Haltestelle 1 &nbsp;·&nbsp; 4x + 3 = 3x + 9</option>
+      </select>
+    </label>
+  </header>
+
+  <main class="layout">
+    <section class="stage" aria-labelledby="question">
+      <h2 class="question" id="question">Wie viele Bälle sind in einem Päckchen?</h2>
+
+      <div class="scale-wrap">
+        <svg id="scale" viewBox="-12 0 1024 620" role="group" aria-label="Balkenwaage">
+          <defs>
+            <radialGradient id="ballGrad" cx="0.42" cy="0.38" r="0.66" fx="0.33" fy="0.28">
+              <stop offset="0" stop-color="#FFE3B3"/>
+              <stop offset="0.42" stop-color="#F7931E"/>
+              <stop offset="1" stop-color="#D2600A"/>
+            </radialGradient>
+            <symbol id="pk" viewBox="-2 -2 76 72">
+              <g stroke="#8C5A28" stroke-width="2" stroke-linejoin="round">
+                <polygon points="0,17 17,0 72,0 55,17" fill="#E6C187"/>
+                <rect x="0" y="17" width="55" height="51" fill="#D6A460"/>
+                <polygon points="55,17 72,0 72,51 55,68" fill="#B9864A"/>
+              </g>
+              <polygon points="21.5,17 33.5,17 50.5,0 38.5,0" fill="#C68D4A"/>
+              <rect x="21.5" y="17" width="12" height="9" fill="#C68D4A"/>
+              <rect x="6.5" y="27.5" width="42" height="36.5" rx="4" fill="#FFF4DF" stroke="#8C5A28" stroke-width="1.8"/>
+              <text x="27.5" y="55.5" text-anchor="middle" font-size="38" font-weight="700" fill="#3B2410">x</text>
+            </symbol>
+          </defs>
+
+          <!-- Skala über dem Zeiger -->
+          <g aria-hidden="true">
+            <path class="gauge-arc" d="M459.6 34.1A86 86 0 0 1 540.4 34.1"/>
+            <line class="gauge-tick" x1="470.9" y1="30.1" x2="467.9" y2="18.8"/>
+            <line class="gauge-tick" x1="529.1" y1="30.1" x2="532.1" y2="18.8"/>
+            <line class="gauge-mid" x1="500" y1="31" x2="500" y2="14"/>
+          </g>
+
+          <!-- Ständer -->
+          <g aria-hidden="true">
+            <rect class="s-slate" x="489" y="110" width="22" height="462"/>
+            <polygon class="s-slate" points="405,596 595,596 527,568 473,568"/>
+            <rect class="s-slate2" x="378" y="592" width="244" height="12" rx="6"/>
+          </g>
+
+          <!-- Waagschalen -->
+          <g id="panL">
+            <line class="string" x1="0" y1="0" x2="-216" y2="322"/>
+            <line class="string" x1="0" y1="0" x2="216" y2="322"/>
+            <path class="bowl" d="M-222 324H222C222 344 172 356 0 356S-222 344-222 324Z"/>
+            <rect class="rim" x="-230" y="319" width="460" height="9" rx="4.5"/>
+            <g id="itemsL"></g>
+          </g>
+          <g id="panR">
+            <line class="string" x1="0" y1="0" x2="-216" y2="322"/>
+            <line class="string" x1="0" y1="0" x2="216" y2="322"/>
+            <path class="bowl" d="M-222 324H222C222 344 172 356 0 356S-222 344-222 324Z"/>
+            <rect class="rim" x="-230" y="319" width="460" height="9" rx="4.5"/>
+            <g id="itemsR"></g>
+          </g>
+
+          <!-- Balken mit Zeiger -->
+          <g id="beam" aria-hidden="true">
+            <polygon class="s-slate" points="491,112 509,112 500,40"/>
+            <rect class="s-slate" x="220" y="102" width="560" height="16" rx="8"/>
+            <circle class="hook" cx="238" cy="118" r="8.5"/>
+            <circle class="hook" cx="762" cy="118" r="8.5"/>
+          </g>
+          <circle class="pivot" cx="500" cy="110" r="17" aria-hidden="true"/>
+          <circle class="s-slate" cx="500" cy="110" r="5" aria-hidden="true"/>
+        </svg>
+      </div>
+
+      <div class="tray" id="tray" hidden>
+        <span class="tray-title">Weggenommen</span>
+        <div class="tray-side"><span class="tray-lbl">links</span><span class="tray-items" id="trayL"></span></div>
+        <div class="tray-side"><span class="tray-lbl">rechts</span><span class="tray-items" id="trayR"></span></div>
+      </div>
+      <div class="status-row">
+        <div class="status" id="status" role="status" aria-live="polite"></div>
+        <div class="controls">
+          <button class="btn primary" id="openBtn" type="button" hidden>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8l9-4 9 4v9l-9 4-9-4z"/><path d="M3 8l9 4 9-4"/><path d="M12 12v9"/></svg>
+            Päckchen öffnen
+          </button>
+          <button class="btn quiet" id="tipBtn" type="button" aria-expanded="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>
+            Tipp
+          </button>
+          <button class="btn" id="undoBtn" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+            Rückgängig
+          </button>
+          <button class="btn" id="resetBtn" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+            Neu starten
+          </button>
+        </div>
+      </div>
+      <p class="hint" id="hint"></p>
+    </section>
+
+    <aside class="panel" aria-labelledby="eqTitle">
+      <div class="frame">
+        <span class="br a1" aria-hidden="true"></span>
+        <span class="br a2" aria-hidden="true"></span>
+        <span class="br b1" aria-hidden="true"></span>
+        <span class="br b2" aria-hidden="true"></span>
+        <div class="panel-head">
+          <h2 id="eqTitle">Gleichung</h2>
+          <button class="btn quiet" id="eqToggle" type="button"></button>
+        </div>
+        <div id="eqBody" aria-live="polite"></div>
+      </div>
+    </aside>
+  </main>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  /* ---------- Aufgaben ---------- */
+  const TASKS = {
+    einstieg: { x: 4, start: { L: { p: 3, b: 2 }, R: { p: 2, b: 6 } }, showEq: false, history: [] },
+    halt1:    { x: 6, start: { L: { p: 4, b: 3 }, R: { p: 3, b: 9 } }, showEq: false,  history: [] }
+  };
+
+  /* ---------- Geometrie (SVG-Einheiten) ---------- */
+  const NS = 'http://www.w3.org/2000/svg';
+  const PX = 500, PY = 110, ARM = 262, HANG_DY = 8;   // Drehpunkt, Armlänge, Aufhängung unter dem Balken
+  const RIM = 319, STR_X = 216, STR_Y = 322;           // Auflagefläche, Schnur-Endpunkte
+  const BW = 72, BH = 68, BD = 17, BGAP = 5;           // Päckchen
+  const R = 20, RGAP = 2, GROUP_GAP = 22;              // Bälle
+  const K = 55, C = 8.5, MAX_ANGLE = 14;               // Feder, Dämpfung, max. Neigung
+  const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const $ = (id) => document.getElementById(id);
+  const svg = $('scale'), beam = $('beam');
+  const pans = {
+    L: { g: $('panL'), itemsG: $('itemsL'), items: [], leaving: [] },
+    R: { g: $('panR'), itemsG: $('itemsR'), items: [], leaving: [] }
+  };
+  const statusEl = $('status'), hintEl = $('hint'), eqBody = $('eqBody'), eqToggle = $('eqToggle');
+  const undoBtn = $('undoBtn'), resetBtn = $('resetBtn'), tipBtn = $('tipBtn'), openBtn = $('openBtn');
+  const trayEl = $('tray'), trayL = $('trayL'), trayR = $('trayR'), taskSel = $('taskSel');
+
+  let key = 'einstieg', task = TASKS[key];
+  let tipOpen = false;
+  let angle = 0, vel = 0, target = 0, running = false, last = 0;
+  let uid = 0, shownLines = 0, shownPending = false;
+
+  /* ---------- Icons ---------- */
+  const ICON_OK = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.5" fill="currentColor"/><path d="M7 12.4l3.3 3.3L17.2 8.8" fill="none" style="stroke: var(--paper)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const ICON_TILT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 1.8 20.5h20.4z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M12 9v5.2" style="stroke: var(--paper)" stroke-width="2.5" stroke-linecap="round"/><circle cx="12" cy="17.3" r="1.5" style="fill: var(--paper)"/></svg>';
+  const ICON_EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const ICON_EYE_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.1 4"/><path d="M6.6 6.6C3.9 8.4 2 12 2 12s3.6 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+
+  /* ---------- Hilfsfunktionen ---------- */
+  function mk(tag, attrs, parent) {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  const weight = (s, x) => s.p * x + s.b;
+  const other = (side) => (side === 'L' ? 'R' : 'L');
+  const balls = (n) => n + ' ' + (n === 1 ? 'Ball' : 'Bälle');
+
+  const PK = '<svg class="pk" viewBox="-2 -2 76 72" role="img" aria-label="x"><use href="#pk" xlink:href="#pk"/></svg>';
+  const px = (p) => (p === 1 ? '' : '<span class="co">' + p + '</span>') + PK;
+  const BL = '<svg class="bl" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="19" fill="url(#ballGrad)" stroke="#A9601A" stroke-width="2"/></svg>';
+  function term(s) {
+    const parts = [];
+    if (s.p) parts.push(px(s.p));
+    if (s.b) parts.push(String(s.b));
+    return parts.length ? parts.join(' + ') : '0';
+  }
+  function minus(p, b) {
+    const t = [];
+    if (p) t.push(px(p));
+    if (b) t.push(String(b));
+    return t.length ? '−' + t.join(' − ') : '±0';
+  }
+  function opKind(o) {
+    if (o.pL !== o.pR || o.bL !== o.bR) return 'uneven';
+    if (o.pL > 0 && o.bL === 0) return 'p';
+    if (o.bL > 0 && o.pL === 0) return 'b';
+    return 'pb';
+  }
+  function opText(o) {
+    if (opKind(o) !== 'uneven') return '| ' + minus(o.pL, o.bL);
+    return '| links ' + minus(o.pL, o.bL) + ', rechts ' + minus(o.pR, o.bR);
+  }
+
+  /* ---------- Zustand aus dem Verlauf ableiten ---------- */
+  function derive(t) {
+    const x = t.x;
+    const L = { ...t.start.L }, Rr = { ...t.start.R };
+    const lines = [{ L: { ...L }, R: { ...Rr }, op: null }];
+    let base = { L: { ...L }, R: { ...Rr } };
+    let opened = false;
+    let firstKind = null;   // was seit der letzten Marke zuerst weggenommen wurde
+    let invalid = false;    // beidseitig Verschiedenes weggenommen
+    for (const a of t.history) {
+      if (a.type === 'open') { opened = true; continue; }
+      (a.side === 'L' ? L : Rr)[a.kind]--;
+      if (!firstKind) firstKind = a.kind;
+      if (weight(L, x) !== weight(Rr, x)) continue;
+      const op = { pL: base.L.p - L.p, bL: base.L.b - L.b, pR: base.R.p - Rr.p, bR: base.R.b - Rr.b };
+      if (!op.pL && !op.bL && !op.pR && !op.bR) continue;
+      const k = opKind(op);
+      if (k === 'uneven') { invalid = true; continue; }   // keine Äquivalenzumformung
+      invalid = false;
+      if (k === 'pb') {
+        // Päckchen und Bälle zugleich: zwei Zeilen, in der gewählten Reihenfolge
+        const pOp = { pL: op.pL, bL: 0, pR: op.pR, bR: 0 };
+        const bOp = { pL: 0, bL: op.bL, pR: 0, bR: op.bR };
+        const first = firstKind === 'p' ? pOp : bOp;
+        const second = firstKind === 'p' ? bOp : pOp;
+        const midL = { p: base.L.p - first.pL, b: base.L.b - first.bL };
+        const midR = { p: base.R.p - first.pR, b: base.R.b - first.bR };
+        lines[lines.length - 1].op = first;
+        lines.push({ L: midL, R: midR, op: second });
+        lines.push({ L: { ...L }, R: { ...Rr }, op: null });
+      } else {
+        const n = lines.length;
+        const prev = n >= 2 ? lines[n - 2].op : null;
+        if (prev && opKind(prev) === k) {
+          lines[n - 2].op = { pL: prev.pL + op.pL, bL: prev.bL + op.bL, pR: prev.pR + op.pR, bR: prev.bR + op.bR };
+          lines[n - 1] = { L: { ...L }, R: { ...Rr }, op: null };
+        } else {
+          lines[n - 1].op = op;
+          lines.push({ L: { ...L }, R: { ...Rr }, op: null });
+        }
+      }
+      base = { L: { ...L }, R: { ...Rr } };
+      firstKind = null;
+    }
+    const balanced = weight(L, x) === weight(Rr, x);
+    return { L, R: Rr, lines, base, balanced, opened, invalid, diff: weight(Rr, x) - weight(L, x) };
+  }
+  function solvedSide(d, x) {
+    if (!d.balanced) return null;
+    if (d.L.p === 1 && d.L.b === 0 && d.R.p === 0 && d.R.b === x) return 'L';
+    if (d.R.p === 1 && d.R.b === 0 && d.L.p === 0 && d.L.b === x) return 'R';
+    return null;
+  }
+
+  /* ---------- Päckchen und Bälle ---------- */
+  function newItem(side, kind, delay) {
+    const it = { id: ++uid, side, kind, x: 0, y: 0, tx: 0, ty: 0, row: 0,
+                 appear: delay == null ? 1 : -delay, fade: 1, lift: 0, grow: 1, growT: 1, leaving: false, fresh: true };
+    const g = mk('g', {
+      class: 'item ' + (kind === 'p' ? 'box' : 'ball'),
+      tabindex: '0', role: 'button',
+      'aria-label': (kind === 'p' ? 'Päckchen ' : 'Ball ') + (side === 'L' ? 'links' : 'rechts') + ' wegnehmen'
+    });
+    const body = mk('g', { class: 'body' }, g);
+    if (kind === 'p') {
+      mk('rect', { class: 'hit', x: -5, y: -6, width: BW + 10, height: BH + 10 }, body);
+      mk('rect', { class: 'lid', x: BD, y: -30, width: BW - BD, height: 30 }, body);
+      mk('polygon', { class: 'box-top', points: `0,${BD} ${BD},0 ${BW},0 ${BW - BD},${BD}` }, body);
+      mk('polygon', { class: 'box-inner', points: `0,${BD} ${BD},0 ${BW},0 ${BW - BD},${BD}` }, body);
+      it.minis = mk('g', {}, body);
+      mk('rect', { class: 'box-front', x: 0, y: BD, width: BW - BD, height: BH - BD }, body);
+      mk('polygon', { class: 'box-side', points: `${BW - BD},${BD} ${BW},0 ${BW},${BH - BD} ${BW - BD},${BH}` }, body);
+      mk('polygon', { class: 'tape', points: `21.5,${BD} 33.5,${BD} 50.5,0 38.5,0` }, body);
+      mk('rect', { class: 'tape', x: 21.5, y: BD, width: 12, height: 9 }, body);
+      const label = mk('g', { class: 'label' }, body);
+      mk('rect', { x: 9.5, y: 30, width: 36, height: 31, rx: 4 }, label);
+      mk('text', { class: 'box-x', x: (BW - BD) / 2, y: 53 }, label).textContent = 'x';
+      const badge = mk('g', { class: 'badge' }, body);
+      mk('rect', { x: BW / 2 - 54, y: -80, width: 108, height: 38, rx: 19 }, badge);
+      it.badgeText = mk('text', { x: BW / 2, y: -53 }, badge);
+      mk('rect', { class: 'ring', x: -7, y: -7, width: BW + 14, height: BH + 14, rx: 9 }, body);
+    } else {
+      mk('circle', { class: 'hit', r: R + 5 }, body);
+      mk('circle', { class: 'ball-c', r: R, fill: 'url(#ballGrad)' }, body);
+      mk('circle', { class: 'ring', r: R + 5 }, body);
+    }
+    g.addEventListener('click', () => removeItem(it));
+    g.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); removeItem(it); }
+    });
+    it.el = g;
+    pans[side].itemsG.appendChild(g);
+    return it;
+  }
+
+  function setOpened(it, open) {
+    it.el.classList.toggle('opened', open);
+    it.growT = open ? 1.3 : 1;
+    kick();
+    while (it.minis.firstChild) it.minis.firstChild.remove();
+    if (!open) return;
+    const n = task.x, r = 8.5, gap = 1.5;
+    const cols = n <= 3 ? n : (n === 4 ? 2 : 3);
+    const fw = BW - BD;
+    let placed = 0, row = 0;
+    while (placed < n) {
+      const k = Math.min(cols, n - placed);
+      const w = k * 2 * r + (k - 1) * gap;
+      for (let j = 0; j < k; j++) {
+        const c = mk('circle', {
+          class: 'mini', r, fill: 'url(#ballGrad)',
+          cx: (fw - w) / 2 + r + j * (2 * r + gap),
+          cy: BH - 3 - r - row * (2 * r + gap)
+        }, it.minis);
+        c.style.animationDelay = (0.25 + placed * 0.09) + 's';
+        placed++;
+      }
+      row++;
+    }
+    it.badgeText.textContent = balls(n);
+  }
+
+  /* ---------- Anordnung auf der Waagschale ---------- */
+  const clearAt = (px, py) => STR_X * py / STR_Y - Math.abs(px);
+  function boxClear(x, y) {
+    return Math.min(clearAt(x, y + BD), clearAt(x + BD, y), clearAt(x + BW, y), clearAt(x + BW, y + BH - BD));
+  }
+  function ballClear(cx, cy) {
+    let c = Infinity;
+    for (let a = 180; a <= 360; a += 30) {
+      const t = a * Math.PI / 180;
+      c = Math.min(c, clearAt(cx + R * Math.cos(t), cy + R * Math.sin(t)));
+    }
+    return c;
+  }
+
+  function relayout(side) {
+    const pan = pans[side];
+    const boxes = pan.items.filter((i) => i.kind === 'p').sort((a, b) => a.id - b.id);
+    const bls = pan.items.filter((i) => i.kind === 'b').sort((a, b) => a.id - b.id);
+
+    // Päckchen: Reihen zu je 2, von unten nach oben gestapelt
+    const nb = boxes.length, bCols = Math.min(2, nb);
+    const boxW = nb ? bCols * BW + (bCols - 1) * BGAP : 0;
+    const boxPos = [];
+    for (let placed = 0, row = 0; placed < nb; row++) {
+      const k = Math.min(2, nb - placed);
+      const off = (boxW - (k * BW + (k - 1) * BGAP)) / 2;
+      for (let j = 0; j < k; j++) boxPos.push({ x: off + j * (BW + BGAP), y: RIM - BH - row * (BH - BD), row });
+      placed += k;
+    }
+    // Bälle: Pyramide
+    const n = bls.length;
+    let base = 0;
+    while (base * (base + 1) / 2 < n) base++;
+    const step = 2 * R + RGAP, vstep = step * Math.sqrt(3) / 2;
+    const ballW = n ? base * 2 * R + (base - 1) * RGAP : 0;
+    const ballPos = [];
+    for (let placed = 0, row = 0, cap = base; placed < n; row++, cap--) {
+      const k = Math.min(cap, n - placed);
+      const off = (ballW - (k * 2 * R + (k - 1) * RGAP)) / 2;
+      for (let j = 0; j < k; j++) ballPos.push({ x: off + R + j * step, y: RIM - R - row * vstep, row });
+      placed += k;
+    }
+    const gap = nb && n ? GROUP_GAP : 0;
+    const total = boxW + gap + ballW;
+    const clearance = (s) => {
+      const left = -total / 2 + s;
+      let c = Infinity;
+      for (const p of boxPos) c = Math.min(c, boxClear(left + p.x, p.y));
+      for (const p of ballPos) c = Math.min(c, ballClear(left + boxW + gap + p.x, p.y));
+      return c;
+    };
+    let shift = 0;
+    if (clearance(0) < 14) {
+      let best = -Infinity;
+      for (let s = -60; s <= 60; s += 2) {
+        const c = clearance(s);
+        if (c > best + 0.5 || (Math.abs(c - best) <= 0.5 && Math.abs(s) < Math.abs(shift))) { best = c; shift = s; }
+      }
+    }
+    const left = -total / 2 + shift;
+    boxes.forEach((it, i) => { it.tx = left + boxPos[i].x; it.ty = boxPos[i].y; it.row = boxPos[i].row; });
+    bls.forEach((it, i) => { it.tx = left + boxW + gap + ballPos[i].x; it.ty = ballPos[i].y; it.row = ballPos[i].row; });
+    for (const it of pan.items) if (it.fresh) { it.x = it.tx; it.y = it.ty; it.fresh = false; }
+
+    // Zeichenreihenfolge: untere Reihen zuerst, damit Gestapeltes vorne liegt
+    const order = [...pan.items].sort((a, b) => a.row - b.row || a.tx - b.tx);
+    const active = document.activeElement;
+    let i = 0;
+    for (const it of order) {
+      if (pan.itemsG.children[i] !== it.el) pan.itemsG.insertBefore(it.el, pan.itemsG.children[i] || null);
+      i++;
+    }
+    if (active && active !== document.activeElement && document.contains(active)) active.focus({ preventScroll: true });
+  }
+
+  /* ---------- Aktionen ---------- */
+  function removeItem(it) {
+    if (it.leaving || derive(task).opened) return;
+    const pan = pans[it.side];
+    const idx = pan.items.indexOf(it);
+    if (idx < 0) return;
+    const hadFocus = document.activeElement === it.el;
+    task.history.push({ type: 'remove', side: it.side, kind: it.kind });
+    pan.items.splice(idx, 1);
+    it.leaving = true;
+    it.el.removeAttribute('tabindex');
+    it.el.style.pointerEvents = 'none';
+    pan.leaving.push(it);
+    relayout(it.side);
+    tipOpen = false;
+    update();
+    if (hadFocus) {
+      const next = pan.items[0] || pans[other(it.side)].items[0];
+      (next ? next.el : undoBtn).focus({ preventScroll: true });
+    }
+  }
+
+  function openPackage() {
+    const d = derive(task);
+    const side = solvedSide(d, task.x);
+    if (!side || d.opened) return;
+    const box = pans[side].items.find((i) => i.kind === 'p');
+    if (!box) return;
+    task.history.push({ type: 'open', side });
+    setOpened(box, true);
+    update();
+  }
+
+  function undo() {
+    const a = task.history.pop();
+    if (!a) return;
+    if (a.type === 'open') {
+      const box = pans[a.side].items.find((i) => i.kind === 'p');
+      if (box) setOpened(box, false);
+    } else {
+      pans[a.side].items.push(newItem(a.side, a.kind, 0));
+      relayout(a.side);
+    }
+    tipOpen = false;
+    update();
+  }
+
+  function build(stagger) {
+    const d = derive(task);
+    for (const side of ['L', 'R']) {
+      const pan = pans[side];
+      for (const it of [...pan.items, ...pan.leaving]) it.el.remove();
+      pan.items = []; pan.leaving = [];
+      let k = 0;
+      for (let i = 0; i < d[side].p; i++) pan.items.push(newItem(side, 'p', stagger ? (k++) * 0.25 : null));
+      for (let i = 0; i < d[side].b; i++) pan.items.push(newItem(side, 'b', stagger ? (k++) * 0.25 : null));
+      relayout(side);
+    }
+    if (d.opened) {
+      const side = solvedSide(d, task.x);
+      const box = side && pans[side].items.find((i) => i.kind === 'p');
+      if (box) setOpened(box, true);
+    }
+  }
+
+  function reset() {
+    task.history = [];
+    tipOpen = false;
+    shownLines = 0;
+    build(true);
+    update();
+  }
+
+  function switchTask(k) {
+    if (!TASKS[k]) return;
+    key = k; task = TASKS[k];
+    taskSel.value = k;
+    tipOpen = false;
+    shownLines = 0; shownPending = false;
+    build(true);
+    const d = derive(task);
+    angle = computeTarget(d.diff) + (reduced ? 0 : 4);
+    vel = 0;
+    update();
+  }
+
+  function computeTarget(diff) {
+    if (diff === 0) return 0;
+    return Math.sign(diff) * Math.min(MAX_ANGLE, 6 + 1.5 * Math.abs(diff));
+  }
+
+  /* ---------- Texte ---------- */
+  function tipText(d) {
+    const { L, R: Rs } = d;
+    if (!d.balanced) {
+      const s = d.base;
+      const rem = { pL: s.L.p - L.p, bL: s.L.b - L.b, pR: s.R.p - Rs.p, bR: s.R.b - Rs.b };
+      const needR = { p: Math.max(0, rem.pL - rem.pR), b: Math.max(0, rem.bL - rem.bR) };
+      const needL = { p: Math.max(0, rem.pR - rem.pL), b: Math.max(0, rem.bR - rem.bL) };
+      const ok = needR.p <= Rs.p && needR.b <= Rs.b && needL.p <= L.p && needL.b <= L.b;
+      if (!ok) return 'Das geht so nicht mehr auf. Tippe auf „Rückgängig“ und nimm auf beiden Seiten dasselbe weg.';
+      const txt = (n) => [n.p ? n.p + ' Päckchen' : '', n.b ? balls(n.b) : ''].filter(Boolean).join(' und ');
+      const a = txt(needR), b = txt(needL);
+      if (a && b) return 'Nimm rechts noch ' + a + ' und links noch ' + b + ' weg.';
+      if (a) return 'Links hast du mehr weggenommen. Nimm rechts auch ' + a + ' weg.';
+      return 'Rechts hast du mehr weggenommen. Nimm links auch ' + b + ' weg.';
+    }
+    if (L.p > 0 && Rs.p > 0) return 'Auf beiden Seiten liegen Päckchen. Nimm auf beiden Seiten so viele Päckchen weg, dass auf einer Seite keins mehr liegt.';
+    if (L.b > 0 && Rs.b > 0) return 'Auf beiden Seiten liegen Bälle. Nimm auf beiden Seiten so viele Bälle weg, dass auf einer Seite keiner mehr liegt.';
+    return 'Nimm auf beiden Seiten dasselbe weg.';
+  }
+
+  function renderStatus(d, solved) {
+    const x = task.x;
+    let icon = ICON_OK, text, bad = false;
+    if (d.opened) text = 'Im Päckchen sind wirklich ' + balls(x) + '. Also ist ' + PK + ' = ' + x + '.';
+    else if (solved) text = '1 Päckchen wiegt so viel wie ' + balls(x) + '.';
+    else if (!d.balanced) { icon = ICON_TILT; bad = true; text = 'Die Waage kippt nach ' + (d.diff > 0 ? 'rechts' : 'links') + '.'; }
+    else if (d.invalid) { icon = ICON_TILT; bad = true; text = 'Die Waage steht zwar, aber das ist keine erlaubte Umformung.'; }
+    else if (!d.L.p && !d.L.b && !d.R.p && !d.R.b) text = 'Beide Waagschalen sind leer.';
+    else text = 'Die Waage ist im Gleichgewicht.';
+    statusEl.className = 'status' + (bad ? ' bad' : '');
+    statusEl.innerHTML = icon + '<span>' + text + '</span>';
+  }
+
+  function renderHint(d, solved) {
+    const removed = task.history.some((a) => a.type === 'remove');
+    let html = '';
+    if (d.opened) html = '';
+    else if (solved) html = 'Stimmt das? Öffne das Päckchen und zähle nach.';
+    else if (tipOpen) html = '<b>Tipp:</b> ' + tipText(d);
+    else if (d.invalid) html = 'Du hast links etwas anderes weggenommen als rechts. Nimm auf beiden Seiten dasselbe weg.';
+    else if (!d.balanced) html = 'Was musst du tun, damit die Waage wieder im Gleichgewicht ist?';
+    else if (!removed) html = 'Tippe Päckchen oder Bälle an, um sie von der Waage zu nehmen.';
+    hintEl.innerHTML = html;
+  }
+
+  function renderEquation(d, solved) {
+    eqToggle.innerHTML = task.showEq ? ICON_EYE_OFF + 'Ausblenden' : ICON_EYE + 'Zeigen';
+    eqToggle.setAttribute('aria-pressed', String(task.showEq));
+    if (!task.showEq) {
+      eqBody.innerHTML = '<p class="eq-hidden">Die Gleichung ist ausgeblendet.</p>';
+      shownLines = 0; shownPending = false;
+      return;
+    }
+    const row = (l, rel, r, op, cls) =>
+      '<div class="row ' + cls + '"><span class="lhs">' + l + '</span><span class="rel">' + rel +
+      '</span><span class="rhs">' + r + '</span><span class="op">' + op + '</span></div>';
+    let html = '<div class="steps">';
+    d.lines.forEach((ln, i) => {
+      const cls = [i >= shownLines && shownLines > 0 ? 'new' : '', i === d.lines.length - 1 && (solved || d.opened) ? 'result' : ''].join(' ');
+      html += row(term(ln.L), '=', term(ln.R), ln.op ? opText(ln.op) : '', cls);
+    });
+    if (!d.balanced) html += row(term(d.L), '≠', term(d.R), '', 'pending' + (shownPending ? '' : ' new'));
+    html += '</div>';
+    if (d.opened) {
+      const x = task.x, s = task.start;
+      const side = (p, b) => (p === 1 ? '' : p + ' · ') + x + (b ? ' + ' + b : '') + ' = ' + (p * x + b);
+      html += '<div class="probe"><p class="t">Probe mit ' + PK + ' = ' + x + '</p>' +
+        '<p>' + side(s.L.p, s.L.b) + '</p><p>' + side(s.R.p, s.R.b) + '</p>' +
+        '<p class="ok">' + ICON_OK + 'Beide Seiten sind gleich.</p></div>';
+    }
+    eqBody.innerHTML = html;
+    shownLines = d.lines.length;
+    shownPending = !d.balanced;
+  }
+
+  function update() {
+    const d = derive(task);
+    const solved = solvedSide(d, task.x);
+    target = computeTarget(d.diff);
+    renderStatus(d, solved);
+    renderHint(d, solved);
+    renderEquation(d, solved);
+    renderTray();
+    undoBtn.disabled = task.history.length === 0;
+    openBtn.hidden = !(solved && !d.opened);
+    tipBtn.hidden = !!(solved || d.opened);
+    tipBtn.setAttribute('aria-expanded', String(tipOpen));
+    svg.classList.toggle('locked', d.opened);
+    kick();
+  }
+
+  function putBack(side, kind) {
+    for (let i = task.history.length - 1; i >= 0; i--) {
+      const a = task.history[i];
+      if (a.type === 'remove' && a.side === side && a.kind === kind) {
+        task.history.splice(i, 1);
+        build(false);
+        update();
+        return;
+      }
+    }
+  }
+
+  function renderTray() {
+    const n = { L: { p: 0, b: 0 }, R: { p: 0, b: 0 } };
+    for (const a of task.history) if (a.type === 'remove') n[a.side][a.kind]++;
+    const any = n.L.p + n.L.b + n.R.p + n.R.b > 0;
+    trayEl.hidden = !any;
+    if (!any) return;
+    const fill = (el, s, side) => {
+      el.innerHTML = (s.p + s.b === 0)
+        ? '<span class="tray-empty">nichts</span>'
+        : PK.repeat(s.p) + BL.repeat(s.b);
+      el.querySelectorAll('.pk, .bl').forEach((node, idx) => {
+        const kind = idx < s.p ? 'p' : 'b';
+        node.setAttribute('title', 'Zurücklegen');
+        node.addEventListener('click', () => putBack(side, kind));
+      });
+    };
+    fill(trayL, n.L, 'L');
+    fill(trayR, n.R, 'R');
+  }
+
+  /* ---------- Animation ---------- */
+  function render() {
+    beam.setAttribute('transform', 'rotate(' + angle.toFixed(3) + ' ' + PX + ' ' + PY + ')');
+    const a = angle * Math.PI / 180, c = Math.cos(a), s = Math.sin(a);
+    for (const [side, sign] of [['L', -1], ['R', 1]]) {
+      const hx = PX + sign * ARM * c - HANG_DY * s;
+      const hy = PY + sign * ARM * s + HANG_DY * c;
+      pans[side].g.setAttribute('transform', 'translate(' + hx.toFixed(2) + ' ' + hy.toFixed(2) + ')');
+      for (const it of pans[side].items) place(it);
+      for (const it of pans[side].leaving) place(it);
+    }
+  }
+  function place(it) {
+    const ap = Math.max(0, Math.min(1, it.appear));
+    let sc = 0.4 + 0.6 * (1 - Math.pow(1 - ap, 3)), op = ap;
+    if (it.leaving) { sc = 0.8 + 0.2 * Math.max(0, it.fade); op = Math.max(0, it.fade); }
+    sc *= it.grow;
+    const cx = it.kind === 'p' ? BW / 2 : 0, cy = it.kind === 'p' ? BH : 0;
+    it.el.setAttribute('transform',
+      'translate(' + (it.x + cx).toFixed(2) + ' ' + (it.y + cy - it.lift).toFixed(2) + ') scale(' + sc.toFixed(3) + ') translate(' + (-cx) + ' ' + (-cy) + ')');
+    it.el.style.opacity = op < 1 ? op.toFixed(3) : '';
+  }
+  function frame(now) {
+    let dt = (now - last) / 1000;
+    last = now;
+    if (!(dt > 0)) dt = 1 / 60;
+    if (dt > 0.05) dt = 0.05;
+    let busy = false;
+    if (reduced) { angle = target; vel = 0; }
+    else {
+      const n = 4, h = dt / n;
+      for (let i = 0; i < n; i++) { const acc = -K * (angle - target) - C * vel; vel += acc * h; angle += vel * h; }
+      if (Math.abs(angle - target) > 0.02 || Math.abs(vel) > 0.02) busy = true;
+      else { angle = target; vel = 0; }
+    }
+    const kpos = reduced ? 1 : 1 - Math.exp(-dt * 14);
+    for (const side of ['L', 'R']) {
+      const pan = pans[side];
+      for (const it of pan.items) {
+        it.x += (it.tx - it.x) * kpos;
+        it.y += (it.ty - it.y) * kpos;
+        if (Math.abs(it.tx - it.x) > 0.2 || Math.abs(it.ty - it.y) > 0.2) busy = true;
+        else { it.x = it.tx; it.y = it.ty; }
+        if (it.appear < 1) { it.appear = reduced ? 1 : it.appear + dt * 5; busy = true; }
+        if (Math.abs(it.growT - it.grow) > 0.002) { it.grow += (it.growT - it.grow) * (reduced ? 1 : 1 - Math.exp(-dt * 8)); busy = true; }
+        else it.grow = it.growT;
+      }
+      for (let i = pan.leaving.length - 1; i >= 0; i--) {
+        const it = pan.leaving[i];
+        it.fade -= reduced ? 1 : dt * 5;
+        it.lift += dt * 90;
+        busy = true;
+        if (it.fade <= 0) { it.el.remove(); pan.leaving.splice(i, 1); }
+      }
+    }
+    render();
+    if (busy) requestAnimationFrame(frame); else running = false;
+  }
+  function kick() {
+    if (running) return;
+    running = true;
+    last = performance.now();
+    requestAnimationFrame(frame);
+  }
+
+  /* ---------- Bedienung ---------- */
+  taskSel.addEventListener('change', () => switchTask(taskSel.value));
+  undoBtn.addEventListener('click', undo);
+  resetBtn.addEventListener('click', reset);
+  openBtn.addEventListener('click', openPackage);
+  tipBtn.addEventListener('click', () => { tipOpen = !tipOpen; update(); });
+  eqToggle.addEventListener('click', () => { task.showEq = !task.showEq; shownLines = 0; shownPending = false; update(); });
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
+  });
+
+  /* ---------- Start ---------- */
+  build(false);
+  angle = reduced ? 0 : 5;
+  update();
+  render();
+})();
+</script>
+</body>
+</html>
